@@ -8,6 +8,8 @@ const envVarsSchema = z.object({
   PORT: z.coerce.number().default(8000),
   HOST: z.string().min(1).default("127.0.0.1"),
   DB_URI: z.string().min(1).describe("Local Mongo DB"),
+  JWT_ACCESS_SECRET: z.string(),
+  JWT_ACCESS_EXPIRED: z.string().default("30d"),
 });
 const result = envVarsSchema.safeParse(process.env);
 if (!result.success) {
@@ -21,4 +23,11 @@ if (!result.success) {
 }
 const envVars = result.data;
 
-export const { NODE_ENV, PORT, HOST, DB_URI } = envVars;
+export const {
+  NODE_ENV,
+  PORT,
+  HOST,
+  DB_URI,
+  JWT_ACCESS_SECRET,
+  JWT_ACCESS_EXPIRED,
+} = envVars;
