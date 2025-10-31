@@ -11,6 +11,8 @@ export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: "Đăng nhập thành công!",
   SEND_VERIFY_SUCCESS:
     "Vui lòng kiểm tra email chúng tôi đã gửi mã xác thực tới tài khoản của bạn",
+  RESETPASS_SUCCESS:
+    "Vui lòng kiểm tra email chúng tôi đã gửi mật khẩu mới tới email của bạn!",
   VERIFIED_SUCCESS: "Xác thực tài khoản thành công!",
   NOTFOUND_USER: "Không tìm thấy tài khoản của bạn!",
 };
