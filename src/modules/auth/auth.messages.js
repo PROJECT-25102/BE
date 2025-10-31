@@ -15,4 +15,6 @@ export const AUTH_MESSAGES = {
     "Vui lòng kiểm tra email chúng tôi đã gửi mật khẩu mới tới email của bạn!",
   VERIFIED_SUCCESS: "Xác thực tài khoản thành công!",
   NOTFOUND_USER: "Không tìm thấy tài khoản của bạn!",
+  REQUIRE_GOOLE:
+    "Tài khoản của bạn chưa có mật khẩu vui lòng đăng nhập bằng google!",
 };
