@@ -8,6 +8,7 @@ import notFoundHandler from "./src/common/middlewares/not-found.middleware.js";
 import routes from "./src/routes.js";
 import { checkVersion } from "./src/common/configs/node-version.js";
 import connectDB from "./src/common/configs/database.js";
+import { movieStatusJob } from "./src/modules/job/statusMovieJob.js";
 
 checkVersion();
 
@@ -31,6 +32,7 @@ let server;
 
 connectDB()
   .then(() => {
+    movieStatusJob();
     server = app.listen(PORT, () => {
       if (NODE_ENV === "development") {
         console.log(`START API: http://localhost:${PORT}/api`);
