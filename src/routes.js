@@ -15,5 +15,6 @@ routes.use("/user", authenticate(JWT_ACCESS_SECRET), userRoute);
 routes.use("/movie", movieRoute);
 routes.use("/category", categoryRouter);
 routes.use("/room", roomRoute);
+routes.use("/seat", seatRoute);
 
 export default routes;
