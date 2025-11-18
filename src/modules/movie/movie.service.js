@@ -34,8 +34,8 @@ export const createMovieService = async (payload) => {
   const existingMovie = await Movie.findOne({
     name: { $regex: `^${payload.name}$`, $options: "i" },
   });
-  if (new Date(payload.releaseDate) < new Date(payload.endDate))
-    throwError(400, "Thời gian ngừng chiếu phải ");
+  if (new Date(payload.releaseDate) > new Date(payload.endDate))
+    throwError(400, "Thời gian ngừng chiếu phải sau thời gian công chiếu!");
   if (existingMovie) throwError(400, "Phim này đã tồn tại trong hệ thống!");
   if (new Date(payload.releaseDate) < new Date()) {
     throwError(400, "Ngày công chiếu phải là ngày trong tương lai!");
@@ -62,12 +62,6 @@ export const updateMovieService = async (id, payload) => {
     ? dayjs(payload.endDate)
     : dayjs(movie.endDate);
   const now = dayjs();
-  if (dayjs(movie.releaseDate).isBefore(now) && payload.releaseDate) {
-    throwError(
-      400,
-      "Không thể thay đổi ngày công chiếu khi phim đã bắt đầu chiếu!",
-    );
-  }
   if (!endDate.isAfter(releaseDate)) {
     throwError(400, "Ngày ngừng chiếu phải sau ngày công chiếu!");
   }

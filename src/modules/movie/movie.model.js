@@ -32,7 +32,6 @@ const movieSchema = new mongoose.Schema(
     },
     subLanguage: {
       type: String,
-      required: true,
     },
     duration: { type: Number, required: true },
     releaseDate: { type: Date, required: true },
