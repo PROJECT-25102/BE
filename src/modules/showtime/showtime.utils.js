@@ -97,3 +97,36 @@ export const generateShowtime = async (
 
   return result;
 };
+
+export const groupedWithMovie = (data) => {
+  const moviesMap = new Map();
+  for (const showtime of data) {
+    const movieId = `${showtime.movieId._id}`;
+    const startTime = dayjs(showtime.startTime);
+    const dayOfWeek = startTime.day();
+    if (moviesMap.has(movieId)) {
+      const existing = moviesMap.get(movieId);
+      existing.showtimeCount += 1;
+      if (startTime.isBefore(existing.firstStartTime))
+        existing.firstStartTime = startTime;
+      if (startTime.isAfter(existing.lastStartTime))
+        existing.lastStartTime = startTime;
+      existing.dayOfWeeks.add(dayOfWeek);
+    } else {
+      moviesMap.set(movieId, {
+        ...showtime.movieId.toObject(),
+        showtimeCount: 1,
+        firstStartTime: startTime,
+        lastStartTime: startTime,
+        dayOfWeeks: new Set([dayOfWeek]),
+      });
+    }
+  }
+  let movies = Array.from(moviesMap.values()).map((movie) => ({
+    ...movie,
+    firstStartTime: movie.firstStartTime.toDate(),
+    lastStartTime: movie.lastStartTime.toDate(),
+    dayOfWeeks: Array.from(movie.dayOfWeeks).sort(),
+  }));
+  return movies;
+};

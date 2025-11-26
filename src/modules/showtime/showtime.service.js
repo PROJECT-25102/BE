@@ -1,21 +1,36 @@
 import dayjs from "dayjs";
+import { SHOWTIME_STATUS } from "../../common/constants/showtime.js";
 import { throwError } from "../../common/utils/create-response.js";
+import { queryHelper } from "../../common/utils/query-helper.js";
+import Showtime from "./showtime.model.js";
 import {
   calculatorEndTime,
   checkAvaiableMovie,
   checkAvaiableRoom,
   checkConflictShowtime,
   generateShowtime,
+  groupedWithMovie,
 } from "./showtime.utils.js";
-import Showtime from "./showtime.model.js";
-import { queryHelper } from "../../common/utils/query-helper.js";
-import { SHOWTIME_STATUS } from "../../common/constants/showtime.js";
+import { createPagination } from "../../common/utils/create-pagination.js";
 
 export const getAllShowtimeService = async (query) => {
   const showtimes = await queryHelper(Showtime, query, {
-    populate: [{ path: "movieId" }, { path: "roomId" }],
+    populate: [{ path: "movieId", populate: "category" }, { path: "roomId" }],
   });
   return showtimes;
+};
+
+export const getShowtimesByWeekdayService = async (query) => {
+  const { page = 1, limit = 10, pagination = true, ...otherQuery } = query;
+  const showtimes = await getAllShowtimeService(otherQuery);
+  const map = {};
+  showtimes.data.forEach((st) => {
+    if (!st.movieId) return;
+    const dateKey = dayjs(st.startTime).format("YYYY-MM-DD");
+    if (!map[dateKey]) map[dateKey] = [];
+    map[dateKey].push(st);
+  });
+  return pagination ? createPagination(map, Number(page), Number(limit)) : map;
 };
 
 export const getDetailShowtimeService = async (id) => {
@@ -26,55 +41,38 @@ export const getDetailShowtimeService = async (id) => {
 };
 
 export const getMovieHasShowtimeService = async (query) => {
-  const { page = 1, limit = 10, ...otherQuery } = query;
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    statusRelease,
+    sort = "name_asc",
+    ...otherQuery
+  } = query;
+
   const { data } = await getAllShowtimeService(otherQuery);
-
-  const moviesMap = new Map();
-
-  for (const showtime of data) {
-    const movieId = `${showtime.movieId._id}`;
-    const startTime = dayjs(showtime.startTime);
-    const dayOfWeek = startTime.day();
-    if (moviesMap.has(movieId)) {
-      const existing = moviesMap.get(movieId);
-      existing.showtimeCount += 1;
-      if (startTime.isBefore(existing.firstStartTime)) {
-        existing.firstStartTime = startTime;
-      }
-      if (startTime.isAfter(existing.lastStartTime)) {
-        existing.lastStartTime = startTime;
-      }
-      existing.dayOfWeeks.add(dayOfWeek);
-    } else {
-      moviesMap.set(movieId, {
-        ...showtime.movieId.toObject(),
-        showtimeCount: 1,
-        firstStartTime: startTime,
-        lastStartTime: startTime,
-        dayOfWeeks: new Set([dayOfWeek]),
-      });
-    }
+  let movies = groupedWithMovie(data);
+  if (search && typeof search === "string") {
+    const regex = new RegExp(search, "i");
+    movies = movies.filter((movie) => regex.test(movie.name));
   }
-  const movies = Array.from(moviesMap.values()).map((movie) => ({
-    ...movie,
-    firstStartTime: movie.firstStartTime.toDate(),
-    lastStartTime: movie.lastStartTime.toDate(),
-    dayOfWeeks: Array.from(movie.dayOfWeeks).sort(),
-  }));
+  if (statusRelease) {
+    movies = movies.filter((movie) => movie.statusRelease === statusRelease);
+  }
+  switch (sort) {
+    case "name_asc":
+      movies.sort((a, b) =>
+        a.name.localeCompare(b.name, "vi", { sensitivity: "base" }),
+      );
+      break;
+    case "name_desc":
+      movies.sort((a, b) =>
+        b.name.localeCompare(a.name, "vi", { sensitivity: "base" }),
+      );
+      break;
+  }
 
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
-  const pagedMovies = movies.slice(startIndex, endIndex);
-
-  return {
-    data: pagedMovies,
-    meta: {
-      total: movies.length,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(movies.length / limit),
-    },
-  };
+  return createPagination(movies, Number(page), Number(limit));
 };
 
 export const createShowtimeService = async (payload) => {
@@ -90,7 +88,6 @@ export const createShowtimeService = async (payload) => {
   ]);
   const { dayOfWeek, endTime } = calculatorEndTime(movie.duration, startTime);
   const conflict = await checkConflictShowtime(roomId, startTime, endTime);
-  console.log(conflict);
   if (conflict) {
     throwError(
       400,
