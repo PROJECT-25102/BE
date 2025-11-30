@@ -12,6 +12,7 @@ import {
   groupedWithMovie,
 } from "./showtime.utils.js";
 import { createPagination } from "../../common/utils/create-pagination.js";
+import Movie from "../movie/movie.model.js";
 
 export const getAllShowtimeService = async (query) => {
   const showtimes = await queryHelper(Showtime, query, {
@@ -116,12 +117,15 @@ export const createManyShowtimeService = async (payload) => {
 };
 
 export const updateShowtimeService = async (payload, id) => {
-  const { roomId, startTime, endTime } = payload;
+  const { roomId, startTime } = payload;
   const showtime = await Showtime.findById(id);
   if (!showtime) throwError(404, "Xuất chiếu không tồn tại!");
+  const movie = await Movie.findById(showtime.movieId);
+  const { endTime } = calculatorEndTime(movie.duration, startTime);
   if (showtime.status === SHOWTIME_STATUS.IN_PROGRESS)
     throwError(400, "Không thể cập nhật xuất chiếu đang được chiếu!");
   const conflict = await checkConflictShowtime(roomId, startTime, endTime, id);
+  console.log(conflict);
   if (conflict)
     throwError(
       400,

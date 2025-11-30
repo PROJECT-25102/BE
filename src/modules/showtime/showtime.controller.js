@@ -52,6 +52,6 @@ export const createManyShowtime = handleAsync(async (req, res) => {
 
 export const updateShowtime = handleAsync(async (req, res) => {
   const { body, params } = req;
-  const data = await updateShowtimeService(body, params);
+  const data = await updateShowtimeService(body, params.id);
   return createResponse(res, 200, "Cập nhật xuất chiếu thành công!", data);
 });
