@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import Movie from "../movie/movie.model.js";
 
 export const movieStatusJob = () => {
+  console.log(`START MOVIE JOB`);
   cron.schedule("0 0 * * *", async () => {
     try {
       const today = dayjs().startOf("day").toDate();
