@@ -35,13 +35,22 @@ export const getShowtimesByWeekdayService = async (query) => {
     if (!st.movieId) return;
     const dateKey = dayjs(st.startTime).format("YYYY-MM-DD");
     if (!map[dateKey]) map[dateKey] = [];
-    const exists = map[dateKey].some(
+    const existIndex = map[dateKey].findIndex(
       (item) =>
         dayjs(item.startTime).format("HH:mm") ===
         dayjs(st.startTime).format("HH:mm"),
     );
-    if (exists && groupTime) return;
-    map[dateKey].push(st);
+    if (existIndex !== -1 && groupTime) {
+      if (!map[dateKey][existIndex].externalRoom) {
+        map[dateKey][existIndex].externalRoom = [];
+      }
+      map[dateKey][existIndex].externalRoom.push(st.roomId);
+      return;
+    }
+    map[dateKey].push({
+      ...st.toObject(),
+      externalRoom: [st.roomId],
+    });
   });
   return pagination ? createPagination(map, Number(page), Number(limit)) : map;
 };
