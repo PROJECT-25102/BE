@@ -10,7 +10,8 @@ import { checkVersion } from "./src/common/configs/node-version.js";
 import connectDB from "./src/common/configs/database.js";
 import { movieStatusJob } from "./src/modules/job/statusMovieJob.js";
 import { showtimeStatusJob } from "./src/modules/job/statusShowtimeJob.js";
-
+import http from "http";
+import { initSocket } from "./src/modules/socket/index.js";
 checkVersion();
 
 const app = express();
@@ -33,12 +34,16 @@ let server;
 
 connectDB()
   .then(() => {
-    server = app.listen(PORT, () => {
+    console.log("✓ Connected to MongoDB");
+    server = http.createServer(app);
+    initSocket(server);
+    movieStatusJob();
+    showtimeStatusJob();
+    server.listen(PORT, () => {
+      console.log("API Server Started");
       if (NODE_ENV === "development") {
-        console.log(`START API: http://localhost:${PORT}/api`);
+        console.log(`• API: http://localhost:${PORT}/api`);
       }
-      movieStatusJob();
-      showtimeStatusJob();
     });
   })
   .catch((err) => {
