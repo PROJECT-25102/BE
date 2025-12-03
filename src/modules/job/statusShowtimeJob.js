@@ -7,12 +7,20 @@ import { SHOWTIME_STATUS } from "../../common/constants/showtime.js";
 export async function functionUpdateStatusShowtime() {
   try {
     const now = dayjs();
-    const showtimes = await Showtime.find().lean();
+    const showtimes = await Showtime.find({
+      status: {
+        $nin: [
+          SHOWTIME_STATUS.CANCELLED,
+          SHOWTIME_STATUS.ENDED,
+          SHOWTIME_STATUS.SOLD_OUT,
+        ],
+      },
+    }).lean();
     for (const st of showtimes) {
       const movie = await Movie.findById(st.movieId).lean();
       if (!movie) continue;
       const start = dayjs(st.startTime);
-      const end = dayjs(st.startTime).add(movie.duration, "minute");
+      const end = start.add(movie.duration, "minute");
       let newStatus = st.status;
       if (now.isBefore(start)) {
         newStatus = SHOWTIME_STATUS.SCHEDULED;
@@ -33,6 +41,7 @@ export async function functionUpdateStatusShowtime() {
     console.error("Lỗi cập nhật trạng thái suất chiếu:", err);
   }
 }
+
 let isCronStarted = false;
 export const showtimeStatusJob = async () => {
   if (isCronStarted) return;
