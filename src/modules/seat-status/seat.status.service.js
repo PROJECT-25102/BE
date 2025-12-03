@@ -82,10 +82,7 @@ export const unHoldSeatService = async (userId, showtimeId, seatIds) => {
   const heldSeats = await SeatStatus.find(conditional).lean();
   if (heldSeats.length === 0) return 0;
   const showtimeIds = [...new Set(heldSeats.map((s) => String(s.showtimeId)))];
-  const result = await SeatStatus.deleteMany({
-    userId,
-    status: SEAT_STATUS.HOLD,
-  });
+  const result = await SeatStatus.deleteMany(conditional);
   const io = getIO();
   showtimeIds.forEach((showtimeId) => {
     io.to(showtimeId).emit("seatUpdated", {
@@ -96,4 +93,26 @@ export const unHoldSeatService = async (userId, showtimeId, seatIds) => {
   });
 
   return result.deletedCount;
+};
+
+export const extendHoldSeatTime = async (
+  userId,
+  showtimeId,
+  seatIds,
+  extraMinutes = 5,
+) => {
+  const filter = {
+    userId,
+    status: SEAT_STATUS.HOLD,
+  };
+  if (showtimeId) filter.showtimeId = showtimeId;
+  if (seatIds) filter.seatId = { $in: seatIds };
+
+  const newExpireTime = dayjs().add(extraMinutes, "minutes").toDate();
+
+  const result = await SeatStatus.updateMany(filter, {
+    $set: { expiredHold: newExpireTime },
+  });
+
+  return result.modifiedCount;
 };
