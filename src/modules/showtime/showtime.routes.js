@@ -3,6 +3,7 @@ import {
   createManyShowtime,
   createShowtime,
   getAllShowtime,
+  getDetailShowtime,
   getMovieHasShowtime,
   getShowtimesByWeekday,
   updateShowtime,
@@ -11,6 +12,7 @@ import {
 const showtimeRoute = Router();
 
 showtimeRoute.get("/", getAllShowtime);
+showtimeRoute.get("/detail/:id", getDetailShowtime);
 showtimeRoute.get("/movie", getMovieHasShowtime);
 showtimeRoute.get("/weekday", getShowtimesByWeekday);
 showtimeRoute.post("/", createShowtime);
