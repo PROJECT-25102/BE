@@ -13,6 +13,8 @@ import {
 } from "./showtime.utils.js";
 import { createPagination } from "../../common/utils/create-pagination.js";
 import Movie from "../movie/movie.model.js";
+import { SEAT_STATUS } from "../../common/constants/seat.status.js";
+import SeatStatus from "../seat-status/seat.status.model.js";
 
 export const getAllShowtimeService = async (query) => {
   const showtimes = await queryHelper(Showtime, query, {
@@ -29,29 +31,42 @@ export const getShowtimesByWeekdayService = async (query) => {
     groupTime = false,
     ...otherQuery
   } = query;
+
   const showtimes = await getAllShowtimeService(otherQuery);
   const map = {};
-  showtimes.data.forEach((st) => {
-    if (!st.movieId) return;
+
+  for (const st of showtimes.data) {
+    if (!st.movieId) continue;
+
     const dateKey = dayjs(st.startTime).format("YYYY-MM-DD");
+
     if (!map[dateKey]) map[dateKey] = [];
+
     const existIndex = map[dateKey].findIndex(
       (item) =>
         dayjs(item.startTime).format("HH:mm") ===
         dayjs(st.startTime).format("HH:mm"),
     );
+    const bookedSeat = await SeatStatus.countDocuments({
+      showtimeId: st._id,
+      status: SEAT_STATUS.BOOKED,
+    });
+
     if (existIndex !== -1 && groupTime) {
       if (!map[dateKey][existIndex].externalRoom) {
         map[dateKey][existIndex].externalRoom = [];
       }
       map[dateKey][existIndex].externalRoom.push(st.roomId);
-      return;
+      map[dateKey][existIndex].bookedSeat += bookedSeat;
+      continue;
     }
     map[dateKey].push({
       ...st.toObject(),
       externalRoom: [st.roomId],
+      bookedSeat,
     });
-  });
+  }
+
   return pagination ? createPagination(map, Number(page), Number(limit)) : map;
 };
 
