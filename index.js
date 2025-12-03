@@ -1,17 +1,18 @@
 import cors from "cors";
 import express from "express";
+import http from "http";
 import morgan from "morgan";
+import connectDB from "./src/common/configs/database.js";
 import { NODE_ENV, PORT } from "./src/common/configs/environment.js";
+import { checkVersion } from "./src/common/configs/node-version.js";
 import errorHandler from "./src/common/middlewares/error.middleware.js";
 import jsonValidator from "./src/common/middlewares/json-valid.middleware.js";
 import notFoundHandler from "./src/common/middlewares/not-found.middleware.js";
-import routes from "./src/routes.js";
-import { checkVersion } from "./src/common/configs/node-version.js";
-import connectDB from "./src/common/configs/database.js";
+import { seatStatusJob } from "./src/modules/job/seatStatusJob.js";
 import { movieStatusJob } from "./src/modules/job/statusMovieJob.js";
 import { showtimeStatusJob } from "./src/modules/job/statusShowtimeJob.js";
-import http from "http";
 import { initSocket } from "./src/modules/socket/index.js";
+import routes from "./src/routes.js";
 checkVersion();
 
 const app = express();
@@ -39,10 +40,10 @@ connectDB()
     initSocket(server);
     movieStatusJob();
     showtimeStatusJob();
-    server.listen(PORT, () => {
-      console.log("API Server Started");
+    seatStatusJob();
+    server.listen(PORT, async () => {
       if (NODE_ENV === "development") {
-        console.log(`• API: http://localhost:${PORT}/api`);
+        console.log(`• API: http://localhost:${PORT}`);
       }
     });
   })
@@ -54,7 +55,13 @@ connectDB()
 process.on("unhandledRejection", (error) => {
   console.error(`Error: ${error.message}`);
   if (server) {
-    server.close(() => process.exit(1));
+    server.close(async () => {
+      const ngrok = await import("ngrok");
+      if (ngrok) {
+        await ngrok.kill();
+      }
+      process.exit(1);
+    });
   } else {
     process.exit(1);
   }

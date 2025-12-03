@@ -21,7 +21,7 @@ const seatStatuSchema = new mongoose.Schema(
       default: SEAT_STATUS.HOLD,
     },
     expiredHold: {
-      type: String,
+      type: Date,
       default: () => new Date(Date.now() + 5 * 60 * 1000),
     },
   },

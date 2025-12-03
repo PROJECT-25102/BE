@@ -72,12 +72,14 @@ export const toggleSeatService = async (payload, userId) => {
   return seat;
 };
 
-export const unHoldSeatService = async (userId) => {
-  const heldSeats = await SeatStatus.find({
+export const unHoldSeatService = async (userId, showtimeId, seatIds) => {
+  const conditional = {
     userId,
     status: SEAT_STATUS.HOLD,
-  }).lean();
-
+  };
+  if (showtimeId) conditional.showtimeId = showtimeId;
+  if (seatIds) conditional.seatId = { $in: seatIds };
+  const heldSeats = await SeatStatus.find(conditional).lean();
   if (heldSeats.length === 0) return 0;
   const showtimeIds = [...new Set(heldSeats.map((s) => String(s.showtimeId)))];
   const result = await SeatStatus.deleteMany({
