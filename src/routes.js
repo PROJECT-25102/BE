@@ -9,6 +9,7 @@ import roomRoute from "./modules/room/room.routes.js";
 import seatRoute from "./modules/seat/seat.routes.js";
 import showtimeRoute from "./modules/showtime/showtime.routes.js";
 import seatStatusRoute from "./modules/seat-status/seat.status.routes.js";
+import checkoutRoute from "./modules/checkout/checkout.routes.js";
 
 const routes = Router();
 
@@ -20,5 +21,6 @@ routes.use("/room", roomRoute);
 routes.use("/seat", seatRoute);
 routes.use("/showtime", showtimeRoute);
 routes.use("/seat-status", seatStatusRoute);
+routes.use("/check-out", checkoutRoute);
 
 export default routes;
