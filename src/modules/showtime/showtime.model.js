@@ -27,6 +27,10 @@ const showtimeSchema = new mongoose.Schema(
       enum: Object.values(SHOWTIME_STATUS),
       default: SHOWTIME_STATUS.SCHEDULED,
     },
+    bookedCount: {
+      type: Number,
+      default: 0,
+    },
     cancelDescription: {
       type: String,
       required: function () {

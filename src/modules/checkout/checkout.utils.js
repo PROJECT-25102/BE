@@ -95,7 +95,9 @@ export const updateSeatsToBooked = async (userId, showtimeId, seatId) => {
     },
     { $set: { status: SEAT_STATUS.BOOKED } },
   );
-
+  await Showtime.findByIdAndUpdate(showtimeId, {
+    $inc: { bookedCount: seatId.length },
+  });
   return {
     modifiedCount: result.modifiedCount,
     bookedSeats: seats.map((s) => s.seatLabel),
