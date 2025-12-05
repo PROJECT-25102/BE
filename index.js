@@ -55,13 +55,7 @@ connectDB()
 process.on("unhandledRejection", (error) => {
   console.error(`Error: ${error.message}`);
   if (server) {
-    server.close(async () => {
-      const ngrok = await import("ngrok");
-      if (ngrok) {
-        await ngrok.kill();
-      }
-      process.exit(1);
-    });
+    server.close();
   } else {
     process.exit(1);
   }
