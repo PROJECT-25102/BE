@@ -52,7 +52,7 @@ export const toggleSeatService = async (payload, userId) => {
       });
       return { message: "Đã bỏ giữ ghế" };
     }
-    if (existing.status === "booked") {
+    if (existing.status === SEAT_STATUS.BOOKED) {
       throwError(400, "Bạn đã đặt ghế này rồi!");
     }
   }
