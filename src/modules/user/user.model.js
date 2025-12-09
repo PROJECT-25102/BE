@@ -35,6 +35,20 @@ const userSchema = new mongoose.Schema(
       enum: ["google", "local"],
       default: ["local"],
     },
+    banned: {
+      isBanned: {
+        type: Boolean,
+        default: false,
+      },
+      description: {
+        type: String,
+        default: "",
+      },
+      bannedAt: {
+        type: Date,
+        default: () => new Date(Date.now()),
+      },
+    },
     isVerified: {
       type: Boolean,
       default: function () {
