@@ -80,5 +80,10 @@ export const updateUser = handleAsync(async (req, res) => {
 export const createUser = handleAsync(async (req, res) => {
   const { body } = req;
   const user = await createUserService(body);
-  return createResponse(res, 200, "Tạo người dùng thành công", user);
+  return createResponse(
+    res,
+    200,
+    "Tạo người dùng thành công. Người dùng sẽ phải kích hoạt tài khoản.",
+    user,
+  );
 });
