@@ -30,6 +30,8 @@ export const checkoutWithVnpayService = async (payload, userId) => {
     seat.map((item) => item._id),
   );
   const ticket = await Ticket.create({ ...payload, userId });
+  ticket.qrCode = ticket.ticketId;
+  await ticket.save();
   const data = await generateVnpayLink(ticket._id, payload.totalPrice, userId);
   return data;
 };

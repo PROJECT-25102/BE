@@ -13,6 +13,7 @@ import { movieStatusJob } from "./src/modules/job/statusMovieJob.js";
 import { showtimeStatusJob } from "./src/modules/job/statusShowtimeJob.js";
 import { initSocket } from "./src/modules/socket/index.js";
 import routes from "./src/routes.js";
+import { ticketAutoCancelJob } from "./src/modules/job/ticketStatusJob.js";
 checkVersion();
 
 const app = express();
@@ -41,6 +42,7 @@ connectDB()
     movieStatusJob();
     showtimeStatusJob();
     seatStatusJob();
+    ticketAutoCancelJob();
     server.listen(PORT, async () => {
       if (NODE_ENV === "development") {
         console.log(`• API: http://localhost:${PORT}`);
