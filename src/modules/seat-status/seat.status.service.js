@@ -33,7 +33,10 @@ export const getSeatShowtimeService = async (roomId, showtimeId, query) => {
 };
 
 export const toggleSeatService = async (payload, userId) => {
-  const existing = await SeatStatus.findOne({ seatId: payload.seatId });
+  const existing = await SeatStatus.findOne({
+    showtimeId: payload.showtimeId,
+    seatId: payload.seatId,
+  });
   if (existing) {
     if (existing.userId?.toString() !== userId?.toString()) {
       const isHold = existing.status === SEAT_STATUS.HOLD;
