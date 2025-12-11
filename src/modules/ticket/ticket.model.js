@@ -58,7 +58,7 @@ const ticketSchema = new mongoose.Schema(
     },
     customerInfo: {
       type: {
-        phone: {
+        email: {
           type: String,
           required: true,
         },

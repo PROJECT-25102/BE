@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export const getVerifyTemplateMail = ({ email, link }) => {
   return `<!doctype html>
 <html lang="vi">
@@ -317,4 +319,116 @@ export const getResetPasswordTemplateMail = ({ email, password }) => {
     </div>
   </body>
 </html>`;
+};
+
+export const getSendTicketTemplateMail = ({ ticket }) => {
+  const {
+    ticketId,
+    movieName,
+    roomName,
+    startTime,
+    items,
+    totalPrice,
+    customerInfo,
+  } = ticket;
+  const seats = items?.map((item) => item.seatLabel).join(", ");
+
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5; padding:30px 0; font-family:Arial, sans-serif;">
+    <tr>
+      <td align="center">
+        <table width="550" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:10px; overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td align="center" bgcolor="#ef4444" style="padding:20px; color:white;">
+              <h2 style="margin:0; font-size:24px; font-weight:bold;">Vé xem phim điện tử 🎟</h2>
+              <p style="margin:5px 0 0; font-size:14px; opacity:.9;">Cảm ơn bạn đã đặt vé tại BeeCinema</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:24px;">
+
+              <!-- Ticket Info -->
+              <h3 style="margin:0 0 10px 0; font-size:18px; color:#333;">Thông tin vé</h3>
+
+              <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td width="150" style="font-weight:bold;">Mã vé:</td>
+                  <td>${ticketId}</td>
+                </tr>
+                <tr>
+                  <td width="150" style="font-weight:bold;">Tên khách:</td>
+                  <td>${customerInfo?.userName}</td>
+                </tr>
+                <tr>
+                  <td width="150" style="font-weight:bold;">Số điện thoại:</td>
+                  <td>${customerInfo?.phone}</td>
+                </tr>
+                 <tr>
+                  <td width="150" style="font-weight:bold;">Email:</td>
+                  <td>${customerInfo?.email}</td>
+                </tr>
+              </table>
+
+              <!-- Showtime Info -->
+              <h3 style="margin:25px 0 10px; font-size:18px; color:#333;">Thông tin suất chiếu</h3>
+
+              <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td width="150" style="font-weight:bold;">Phim:</td>
+                  <td>${movieName}</td>
+                </tr>
+                <tr>
+                  <td width="150" style="font-weight:bold;">Phòng chiếu:</td>
+                  <td>${roomName}</td>
+                </tr>
+                <tr>
+                  <td width="150" style="font-weight:bold;">Thời gian:</td>
+                  <td>${dayjs(startTime).format("HH:mm [, Ngày] DD [Tháng] MM [Năm] YYYY")}</td>
+                </tr>
+                <tr>
+                  <td width="150" style="font-weight:bold;">Ghế:</td>
+                  <td>${seats}</td>
+                </tr>
+              </table>
+
+              <!-- Payment Info -->
+              <h3 style="margin:25px 0 10px; font-size:18px; color:#333;">Thanh toán</h3>
+
+              <table width="100%" cellpadding="6" cellspacing="0">
+                <tr>
+                  <td width="150" style="font-weight:bold;">Tổng tiền:</td>
+                  <td style="font-size:18px; font-weight:bold; color:#ef4444;">
+                    ${totalPrice.toLocaleString()}đ
+                  </td>
+                </tr>
+              </table>
+
+              <!-- QR Code -->
+          <!-- QR Code -->
+            <div style="text-align:center; margin:30px 0 10px;">
+              <p style="margin-bottom:12px; font-weight:bold; font-size:14px;">
+                Vui lòng đưa mã QR để check-in tại rạp
+              </p>
+              <img src="cid:qr_ticket" width="200" height="200" style="border-radius:6px;" alt="QR Code"/>
+            </div>
+
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" bgcolor="#fafafa" style="padding:16px; font-size:13px; color:#777; border-top:1px solid #eee;">
+              © ${new Date().getFullYear()} BeeCinema — Chúc bạn xem phim vui vẻ 🎬
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>`;
 };
