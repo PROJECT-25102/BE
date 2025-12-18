@@ -5,6 +5,7 @@ import { getIO } from "../socket/socket.instance.js";
 import SeatStatus from "./seat.status.model.js";
 import { SEAT_STATUS } from "../../common/constants/seat.status.js";
 import { throwError } from "../../common/utils/create-response.js";
+import Room from "../room/room.model.js";
 
 export const getSeatShowtimeService = async (roomId, showtimeId, query) => {
   const seats = await Seat.find({ roomId, ...query }).lean();
@@ -33,40 +34,87 @@ export const getSeatShowtimeService = async (roomId, showtimeId, query) => {
 };
 
 export const toggleSeatService = async (payload, userId) => {
+  const room = await Room.findById(payload.roomId);
+  const rowSeats = await SeatStatus.find({
+    showtimeId: payload.showtimeId,
+    row: payload.row,
+    status: { $in: [SEAT_STATUS.HOLD, SEAT_STATUS.BOOKED] },
+    typeSeat: { $ne: "COUPLE" },
+  });
+  console.log(rowSeats);
+  const existingCols = rowSeats.map((s) => s.col);
+  if (
+    payload.col === 2 &&
+    !existingCols.includes(1) &&
+    !existingCols.includes(3)
+  ) {
+    throwError(400, "Vẫn còn ghế trống bên trái không thể mua ghế vừa chọn!");
+  }
+  if (
+    payload.col === room.cols - 1 &&
+    !existingCols.includes(room.cols) &&
+    !existingCols.includes(room.cols - 2)
+  ) {
+    throwError(400, "Vẫn còn ghế trống bên phải không thể mua ghế vừa chọn!");
+  }
+  const allCols = [...existingCols, payload.col].sort((a, b) => a - b);
+  for (let i = 0; i < allCols.length - 1; i++) {
+    const diff = allCols[i + 1] - allCols[i];
+    if (diff === 2) {
+      throwError(
+        400,
+        "Mua ghế tạo ghế trống, Quý khách nên chọn ghế bên cạnh!",
+      );
+    }
+  }
   const existing = await SeatStatus.findOne({
     showtimeId: payload.showtimeId,
     seatId: payload.seatId,
   });
-  if (existing) {
-    if (existing.userId?.toString() !== userId?.toString()) {
-      const isHold = existing.status === SEAT_STATUS.HOLD;
-      throwError(
-        400,
-        `Ghế ${isHold ? "đang được giữ!" : "đã được đặt trước đó!"}`,
-      );
+  if (existing && existing.status === SEAT_STATUS.HOLD) {
+    const remainingCols = rowSeats
+      .filter((s) => s.seatId.toString() !== payload.seatId)
+      .map((s) => s.col)
+      .sort((a, b) => a - b);
+
+    if (remainingCols.length > 0) {
+      for (let i = 0; i < remainingCols.length - 1; i++) {
+        const diff = remainingCols[i + 1] - remainingCols[i];
+        if (diff === 2) {
+          throwError(
+            400,
+            "Sẽ tạo ghế trống ở giữa hai ghế Quý khách nên hủy ghế lần lượt theo thứ tự",
+          );
+        }
+      }
+      if (remainingCols[0] === 2) {
+        throwError(
+          400,
+          "Không thể bỏ ghế sẽ sinh ra ghế trống bên trái, vui lòng huỷ lần lượt theo thứ tự",
+        );
+      }
+      const lastCol = room.cols;
+      if (remainingCols[remainingCols.length - 1] === lastCol - 1) {
+        throwError(
+          400,
+          "Không thể bỏ ghế sẽ sinh ra ghế trống bên phải, vui lòng huỷ lần lượt theo thứ tự",
+        );
+      }
     }
-    if (existing.status === SEAT_STATUS.HOLD) {
-      await existing.deleteOne();
-      const io = getIO();
-      io.to(existing.showtimeId.toString()).emit("seatUpdated", {
-        seatId: existing.seatId,
-        scheduleId: existing.showtimeId,
-        status: "available",
-      });
-      return { message: "Đã bỏ giữ ghế" };
-    }
-    if (existing.status === SEAT_STATUS.BOOKED) {
-      throwError(400, "Bạn đã đặt ghế này rồi!");
-    }
+    await existing.deleteOne();
+    const io = getIO();
+    io.to(existing.showtimeId.toString()).emit("seatUpdated", {
+      seatId: existing.seatId,
+      scheduleId: existing.showtimeId,
+      status: "available",
+    });
+    return { message: "Đã bỏ giữ ghế" };
   }
-  const count = await SeatStatus.countDocuments({
+  const seat = await SeatStatus.create({
     userId,
-    status: SEAT_STATUS.HOLD,
-    showtimeId: payload.showtimeId,
+    typeSeat: payload.type,
+    ...payload,
   });
-  if (count === 12)
-    throwError(400, "Bạn chỉ được phép giữ 12 ghế trong 1 lần đặt vé!");
-  const seat = await SeatStatus.create({ userId, ...payload });
   const io = getIO();
   io.to(payload.showtimeId.toString()).emit("seatUpdated", {
     seatId: seat.seatId,
