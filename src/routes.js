@@ -11,6 +11,7 @@ import showtimeRoute from "./modules/showtime/showtime.routes.js";
 import seatStatusRoute from "./modules/seat-status/seat.status.routes.js";
 import checkoutRoute from "./modules/checkout/checkout.routes.js";
 import ticketRoute from "./modules/ticket/ticket.routes.js";
+import statsRoute from "./modules/stats/stats.routes.js";
 
 const routes = Router();
 
@@ -24,5 +25,6 @@ routes.use("/showtime", showtimeRoute);
 routes.use("/seat-status", seatStatusRoute);
 routes.use("/check-out", checkoutRoute);
 routes.use("/ticket", ticketRoute);
+routes.use("/stats", statsRoute);
 
 export default routes;

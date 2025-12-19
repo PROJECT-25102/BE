@@ -74,7 +74,7 @@ export const queryHelper = async (Model, queryParams, options = {}) => {
   return { data };
 };
 
-function applyFilter(key, value, queryConditions) {
+export function applyFilter(key, value, queryConditions) {
   if (value == null || value === "") return;
 
   if (value === "__nullOrEmpty__") {
