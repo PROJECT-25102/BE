@@ -90,7 +90,7 @@ const ticketSchema = new mongoose.Schema(
     },
     items: [ticketItems],
     startTime: {
-      type: String,
+      type: Date,
       required: true,
     },
     qrCode: {

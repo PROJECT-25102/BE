@@ -103,12 +103,31 @@ export const getShowtimesByWeekdayService = async (query) => {
 
   const showtimes = await getAllShowtimeService(otherQuery);
   const map = {};
+  const showtimeIds = showtimes.data.map((st) => st._id);
+
+  const bookedSeatAgg = await SeatStatus.aggregate([
+    {
+      $match: {
+        showtimeId: { $in: showtimeIds },
+        status: SEAT_STATUS.BOOKED,
+      },
+    },
+    {
+      $group: {
+        _id: "$showtimeId",
+        bookedSeat: { $sum: 1 },
+      },
+    },
+  ]);
+  const bookedSeatMap = {};
+  for (const item of bookedSeatAgg) {
+    bookedSeatMap[item._id.toString()] = item.bookedSeat;
+  }
 
   for (const st of showtimes.data) {
     if (!st.movieId) continue;
 
     const dateKey = dayjs(st.startTime).format("YYYY-MM-DD");
-
     if (!map[dateKey]) map[dateKey] = [];
 
     const existIndex = map[dateKey].findIndex(
@@ -116,10 +135,8 @@ export const getShowtimesByWeekdayService = async (query) => {
         dayjs(item.startTime).format("HH:mm") ===
         dayjs(st.startTime).format("HH:mm"),
     );
-    const bookedSeat = await SeatStatus.countDocuments({
-      showtimeId: st._id,
-      status: SEAT_STATUS.BOOKED,
-    });
+
+    const bookedSeat = bookedSeatMap[st._id.toString()] || 0;
 
     if (existIndex !== -1 && groupTime) {
       if (!map[dateKey][existIndex].externalRoom) {
@@ -129,6 +146,7 @@ export const getShowtimesByWeekdayService = async (query) => {
       map[dateKey][existIndex].bookedSeat += bookedSeat;
       continue;
     }
+
     map[dateKey].push({
       ...st.toObject(),
       externalRoom: [st.roomId],
