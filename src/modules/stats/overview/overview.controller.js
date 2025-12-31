@@ -6,6 +6,7 @@ import { applyQuickFilter } from "../stats.utils.js";
 import {
   getOverviewByMonthService,
   getOverviewStatsService,
+  getTopRevenueMoviesService,
 } from "./overview.service.js";
 
 export const getOverviewStats = handleAsync(async (req, res) => {
@@ -53,4 +54,23 @@ export const getOverviewByMonth = handleAsync(async (req, res) => {
     year: yearValue,
     result,
   });
+});
+
+export const getTopRevenueMovies = handleAsync(async (req, res) => {
+  const match = {};
+  Object.entries(req.query).forEach(([key, value]) =>
+    applyFilter(key, value, match),
+  );
+  if (match.quickFilter) {
+    const { createdAtFrom, createdAtTo } = applyQuickFilter(
+      req.query.quickFilter,
+    );
+    match.createdAt = {
+      $gte: createdAtFrom,
+      $lte: createdAtTo,
+    };
+    delete match.quickFilter;
+  }
+  const data = await getTopRevenueMoviesService(match);
+  return createResponse(res, 200, "OK", data);
 });
