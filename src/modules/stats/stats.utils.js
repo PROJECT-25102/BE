@@ -30,6 +30,15 @@ export const resolveCompareRanges = (createdAt, field = "createdAt") => {
   };
 };
 
+export const normalizeQueryTime = (range, field = "createdAt") => {
+  if (!range[field]) return null;
+
+  return {
+    from: range[field].$gte || null,
+    to: range[field].$lte || null,
+  };
+};
+
 export const applyQuickFilter = (quickFilter) => {
   const now = dayjs();
 
